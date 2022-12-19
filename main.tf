@@ -22,12 +22,16 @@ resource "vault_jwt_auth_backend" "github_jwt_auth" {
   bound_issuer = var.bound_issuer
 }
 
-# A policy that allows reading of any secret
+# A policy that allows reading of any secret and generating publish access tokens from Artifactory
 resource "vault_policy" "github_actions_runner_policy" {
   name = "github-actions-runner-policy"
   policy = <<EOT
 path "secret/*" {
   capabilities = ["read"]
+}
+path "artifactory/token/publish"
+{
+ capabilities = ["read"]
 }
 EOT
 }
@@ -67,4 +71,50 @@ resource "vault_kubernetes_secret_backend_role" "admin_role" {
   token_max_ttl                 = 43200
   token_default_ttl             = 21600
   kubernetes_role_name          = "admin"
+}
+
+#
+# Artifactory secrets backend
+#
+
+resource "vault_generic_endpoint" "artifactory_plugin" {
+  disable_read         = true
+  disable_delete       = true
+  ignore_absent_fields = true
+  path                 = "sys/plugins/catalog/secret/artifactory"
+  data_json = <<EOT
+{
+  "command": "artifactory",
+  "sha_256": "${var.artifactory_plugin_sha256sum}",
+  "args":"-tls-skip-verify=true"
+}
+EOT
+}
+
+resource "vault_generic_endpoint" "artifactory_config" {
+  disable_read         = true
+  disable_delete       = true
+  ignore_absent_fields = true
+  path                 = "artifactory/config/admin"
+  data_json = <<EOT
+{
+  "url": "${var.artifactory_url}",
+  "access_token": "${var.artifactory_access_token}"
+}
+EOT
+}
+
+resource "vault_generic_endpoint" "artifactory_publish_role"{
+  disable_read         = true
+  disable_delete       = true
+  ignore_absent_fields = true
+  path                 = "artifactory/roles/publish"
+  data_json = <<EOT
+{
+  "username": "publisher",
+  "scope":"applied-permissions/groups:publish",
+  "default_ttl": "8h",
+  "max_ttl":"24h"
+}
+EOT
 }
