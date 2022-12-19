@@ -16,15 +16,15 @@ provider "vault" {
 # GitHub JWT auth method
 #
 resource "vault_jwt_auth_backend" "github_jwt_auth" {
-  description         = "GitHub JWT authentication method"
-  path = "jwt"
+  description        = "GitHub JWT authentication method"
+  path               = "jwt"
   oidc_discovery_url = var.oidc_discovery_url
-  bound_issuer = var.bound_issuer
+  bound_issuer       = var.bound_issuer
 }
 
 # A policy that allows reading of any secret and generating publish access tokens from Artifactory
 resource "vault_policy" "github_actions_runner_policy" {
-  name = "github-actions-runner-policy"
+  name   = "github-actions-runner-policy"
   policy = <<EOT
 path "secret/*" {
   capabilities = ["read"]
@@ -38,16 +38,16 @@ EOT
 
 # Allows all repository belonging to the var.github_org_url access to the policy
 resource "vault_jwt_auth_backend_role" "github_actions_runner_role" {
-  backend         = vault_jwt_auth_backend.github_jwt_auth.path
-  role_name       = "github-actions-runner-role"
-  token_policies  = ["github-actions-runner-policy"]
-  bound_audiences = [ var.github_org_url ]
+  backend           = vault_jwt_auth_backend.github_jwt_auth.path
+  role_name         = "github-actions-runner-role"
+  token_policies    = ["github-actions-runner-policy"]
+  bound_audiences   = [var.github_org_url]
   bound_claims_type = "string"
   bound_claims = {
     aud = var.github_org_url
   }
-  user_claim      = "aud"
-  role_type       = "jwt"
+  user_claim = "aud"
+  role_type  = "jwt"
 }
 
 #
@@ -78,11 +78,9 @@ resource "vault_kubernetes_secret_backend_role" "admin_role" {
 #
 
 resource "vault_generic_endpoint" "artifactory_plugin" {
-  disable_read         = true
-  disable_delete       = true
   ignore_absent_fields = true
   path                 = "sys/plugins/catalog/secret/artifactory"
-  data_json = <<EOT
+  data_json            = <<EOT
 {
   "command": "artifactory",
   "sha_256": "${var.artifactory_plugin_sha256sum}",
@@ -92,11 +90,9 @@ EOT
 }
 
 resource "vault_generic_endpoint" "artifactory_config" {
-  disable_read         = true
-  disable_delete       = true
   ignore_absent_fields = true
   path                 = "artifactory/config/admin"
-  data_json = <<EOT
+  data_json            = <<EOT
 {
   "url": "${var.artifactory_url}",
   "access_token": "${var.artifactory_access_token}"
@@ -104,12 +100,10 @@ resource "vault_generic_endpoint" "artifactory_config" {
 EOT
 }
 
-resource "vault_generic_endpoint" "artifactory_publish_role"{
-  disable_read         = true
-  disable_delete       = true
+resource "vault_generic_endpoint" "artifactory_publish_role" {
   ignore_absent_fields = true
   path                 = "artifactory/roles/publish"
-  data_json = <<EOT
+  data_json            = <<EOT
 {
   "username": "publisher",
   "scope":"applied-permissions/groups:publish",
