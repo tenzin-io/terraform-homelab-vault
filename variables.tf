@@ -27,8 +27,8 @@ variable "kubernetes_ca_cert" {
 }
 
 variable "service_account_jwt" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
   description = "Kubernetes service account token for Vault"
 }
 
@@ -36,18 +36,18 @@ variable "service_account_jwt" {
 # GitHub JWT auth
 #
 variable "oidc_discovery_url" {
-  type = string
+  type    = string
   default = "https://token.actions.githubusercontent.com"
 }
 
 variable "bound_issuer" {
-  type = string
+  type    = string
   default = "https://token.actions.githubusercontent.com"
 }
 
 variable "github_org_url" {
-  type = string
-  default = ""
+  type        = string
+  default     = ""
   description = "The GitHub organization URL"
 }
 
@@ -55,16 +55,16 @@ variable "github_org_url" {
 # Artifactory secrets engine
 #
 variable "artifactory_url" {
-  type = string
+  type        = string
   description = "Artifactory repository URL"
 }
 
 variable "artifactory_access_token" {
-  type = string
+  type        = string
   description = "An access token from which scoped access tokens can be created"
 }
 
 variable "artifactory_plugin_sha256sum" {
-  type = string
+  type        = string
   description = "The sha256sum of the Artifactory plugin.  Needed for plugin registration"
 }
