@@ -8,8 +8,28 @@ terraform {
 }
 
 provider "vault" {
-  address = var.vault_address
-  token   = var.vault_token
+  address = var.vault.address
+  token   = var.vault.token
+}
+
+locals {
+  github_actions_oidc_discovery_url = "https://token.actions.githubusercontent.com"
+  github_actions_bound_issuer       = "https://token.actions.githubusercontent.com"
+}
+
+#
+# GitHub auth method
+#
+resource "vault_github_auth_backend" "github_user_auth" {
+  description  = "GitHub user authentication method"
+  organization = var.github.org_name
+}
+
+resource "vault_github_user" "github_user" {
+  for_each = toset(var.github.users)
+  backend  = vault_github_auth_backend.github_user_auth.id
+  user     = each.value
+  policies = [vault_policy.github_access_policy.name]
 }
 
 #
@@ -18,13 +38,13 @@ provider "vault" {
 resource "vault_jwt_auth_backend" "github_jwt_auth" {
   description        = "GitHub JWT authentication method"
   path               = "jwt"
-  oidc_discovery_url = var.oidc_discovery_url
-  bound_issuer       = var.bound_issuer
+  oidc_discovery_url = local.github_actions_oidc_discovery_url
+  bound_issuer       = local.github_actions_bound_issuer
 }
 
 # A policy that allows reading of any secret and generating publish access tokens from Artifactory
-resource "vault_policy" "github_actions_runner_policy" {
-  name   = "github-actions-runner-policy"
+resource "vault_policy" "github_access_policy" {
+  name   = "github-access-policy"
   policy = <<EOT
 path "secret/*" {
   capabilities = ["read"]
@@ -33,6 +53,10 @@ path "artifactory/token/publish"
 {
  capabilities = ["read"]
 }
+path "kubernetes/creds/admin-role"
+{
+ capabilities = ["read","update"]
+}
 EOT
 }
 
@@ -40,11 +64,11 @@ EOT
 resource "vault_jwt_auth_backend_role" "github_actions_runner_role" {
   backend           = vault_jwt_auth_backend.github_jwt_auth.path
   role_name         = "github-actions-runner-role"
-  token_policies    = ["github-actions-runner-policy"]
-  bound_audiences   = [var.github_org_url]
+  token_policies    = [vault_policy.github_access_policy.name]
+  bound_audiences   = [var.github.org_url]
   bound_claims_type = "string"
   bound_claims = {
-    aud = var.github_org_url
+    aud = var.github.org_url
   }
   user_claim = "aud"
   role_type  = "jwt"
@@ -57,9 +81,9 @@ resource "vault_kubernetes_secret_backend" "homelab_kubernetes_secrets" {
   path                      = "kubernetes"
   default_lease_ttl_seconds = 43200
   max_lease_ttl_seconds     = 86400
-  kubernetes_host           = var.kubernetes_host
-  kubernetes_ca_cert        = var.kubernetes_ca_cert
-  service_account_jwt       = var.service_account_jwt
+  kubernetes_host           = var.kubernetes.host
+  kubernetes_ca_cert        = var.kubernetes.ca_cert
+  service_account_jwt       = var.kubernetes.service_account_jwt
   disable_local_ca_jwt      = false
 }
 
@@ -67,10 +91,11 @@ resource "vault_kubernetes_secret_backend" "homelab_kubernetes_secrets" {
 resource "vault_kubernetes_secret_backend_role" "admin_role" {
   backend                       = vault_kubernetes_secret_backend.homelab_kubernetes_secrets.path
   name                          = "admin-role"
-  allowed_kubernetes_namespaces = ["*"]
   token_max_ttl                 = 43200
   token_default_ttl             = 21600
-  kubernetes_role_name          = "admin"
+  kubernetes_role_name          = "cluster-admin"
+  kubernetes_role_type          = "ClusterRole"
+  allowed_kubernetes_namespaces = ["*"]
 }
 
 #
@@ -83,7 +108,7 @@ resource "vault_generic_endpoint" "artifactory_plugin" {
   data_json            = <<EOT
 {
   "command": "artifactory",
-  "sha_256": "${var.artifactory_plugin_sha256sum}",
+  "sha_256": "${var.artifactory.plugin_sha256sum}",
   "args":"-tls-skip-verify=true"
 }
 EOT
@@ -94,8 +119,8 @@ resource "vault_generic_endpoint" "artifactory_config" {
   path                 = "artifactory/config/admin"
   data_json            = <<EOT
 {
-  "url": "${var.artifactory_url}",
-  "access_token": "${var.artifactory_access_token}"
+  "url": "${var.artifactory.url}",
+  "access_token": "${var.artifactory.access_token}"
 }
 EOT
 }
