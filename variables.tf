@@ -1,12 +1,3 @@
-
-variable "vault" {
-  type = object({
-    token   = string
-    address = string
-  })
-  description = "Vault endpoint parameters"
-}
-
 variable "kubernetes" {
   type = object({
     host                = string

@@ -1,0 +1,4 @@
+{
+  "url": "${artifactory_url}",
+  "access_token": "${admin_access_token}"
+}

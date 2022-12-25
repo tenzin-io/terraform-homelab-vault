@@ -1,0 +1,6 @@
+{
+  "username": "publisher",
+  "scope":"applied-permissions/groups:publish",
+  "default_ttl": "12h",
+  "max_ttl":"24h"
+}
