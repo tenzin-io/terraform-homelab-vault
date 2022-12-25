@@ -11,14 +11,14 @@ resource "vault_jwt_auth_backend" "github_jwt_auth" {
 }
 
 variable "org_url" {
-  type = string
+  type        = string
   description = "The GitHub organization URL endpoint."
 }
 
 variable "vault_policies" {
-  type = list(string)
+  type        = list(string)
   description = "A list of Vault ACL names to attach to the GitHub Actions runner role."
-  default = []
+  default     = []
 }
 
 # Allows all repository belonging to the var.github_org_url access to the policy

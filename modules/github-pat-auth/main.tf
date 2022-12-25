@@ -3,18 +3,18 @@
 #
 
 variable "vault_policies" {
-  type = list(string)
+  type        = list(string)
   description = "A list of Vault policies to attach to the GitHub users."
-  default = []
+  default     = []
 }
 
 variable "users" {
-  type = list(string)
+  type        = list(string)
   description = "A list of allowed GitHub users to Vault."
 }
 
 variable "org_name" {
-  type = string
+  type        = string
   description = "GitHub organization name."
 }
 

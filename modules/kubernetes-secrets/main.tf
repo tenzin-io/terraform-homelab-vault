@@ -3,17 +3,17 @@
 #
 
 variable "host" {
-  type =string
+  type        = string
   description = "Kubernetes API endpoint"
 }
 
 variable "ca_cert" {
-  type = string
+  type        = string
   description = "Kubernetes cluster CA certificate"
 }
 
 variable "service_account_jwt" {
-  type = string
+  type        = string
   description = "Kubernetes service account JWT"
 }
 
@@ -44,11 +44,11 @@ resource "vault_policy" "access_policy" {
 }
 
 output "vault_policy_name" {
-  value = vault_policy.access_policy.name
+  value       = vault_policy.access_policy.name
   description = "The name of the Vault ACL to reference in auth methods."
 }
 
 output "secrets_engine_path" {
-  value = vault_kubernetes_secret_backend.secrets_engine.path
+  value       = vault_kubernetes_secret_backend.secrets_engine.path
   description = "The mount path of the Kubernetes secrets engine."
 }
