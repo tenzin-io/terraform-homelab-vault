@@ -5,7 +5,7 @@ variable "kubernetes" {
     service_account_jwt = string
   })
   description = "Kubernetes configuration parameters"
-
+  default     = null
 }
 
 variable "github" {
@@ -15,14 +15,5 @@ variable "github" {
     users    = list(string)
   })
   description = "GitHub configuration parameters"
+  default     = null
 }
-
-variable "artifactory" {
-  type = object({
-    url              = string
-    access_token     = string
-    plugin_sha256sum = string
-  })
-  description = "Artifactory configuration parameters"
-}
-

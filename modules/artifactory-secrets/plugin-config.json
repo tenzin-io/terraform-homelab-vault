@@ -1,5 +1,0 @@
-{
-  "command": "artifactory",
-  "sha_256": "${plugin_sha256sum}",
-  "args":"-tls-skip-verify=true"
-}
